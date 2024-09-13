@@ -199,27 +199,24 @@ export const todosPage = () => {
               const completed =
                 document.getElementById("new-completed").checked;
 
-              // Retornar los valores del formulario
               return { title, completed };
             },
           }).then((result) => {
             if (result.isConfirmed) {
               const { title, completed } = result.value;
 
-              // Enviar datos al backend para crear una nueva tarea sin pedir ID del propietario
-              fetch("http://localhost:4000/todos", {
+              fetch("http://localhost:4000/todos/add", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                 },
-                credentials: "include", // Suponiendo que las credenciales incluyen al usuario actual
+                credentials: "include",
                 body: JSON.stringify({
                   title,
                   completed,
-                  // El `owner` será manejado en el servidor, no lo enviamos desde el frontend
                 }),
               }).then(() => {
-                window.location.reload(); // Recargar la página para mostrar la nueva tarea
+                window.location.reload();
               });
             }
           });

@@ -50,12 +50,12 @@ export const updateTodosCtrl = (req, res) => {
   res.json({ message: "Tarea actualizada correctamente", task });
 };
 export const createTodoCtrl = (req, res) => {
-  const { title } = req.body;
+  const { title, completed } = req.body;
   const newTodo = {
     id: database.todos.length + 1,
     owner: req.user.id,
     title,
-    completed: false,
+    completed,
   };
   database.todos.push(newTodo);
   res.json({ message: "Tarea creada correctamente", newTodo });
