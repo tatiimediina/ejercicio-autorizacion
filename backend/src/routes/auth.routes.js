@@ -4,7 +4,7 @@ import {
   signOutCtrl,
   validateSessionCtrl,
 } from "../controllers/auth.controllers.js";
-import validarJwt from "../middlewares/validar-jwt.js";
+import { validarJwt } from "../middlewares/validar-jwt.js";
 
 const authRouter = Router();
 
