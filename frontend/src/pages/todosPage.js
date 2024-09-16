@@ -46,46 +46,6 @@ export const todosPage = () => {
     }
   );
 
-  /* const btnCreate = createButton(
-    "Create",
-    [
-      "bg-purple-500",
-      "text-white",
-      "p-2",
-      "rounded",
-      "hover:bg-blue-600",
-      "mb-4",
-    ],
-    () => {
-      Swal.fire({
-        title: "Create New Todo",
-        html: `
-        <div class="flex flex-col gap-1">
-        <input id="new-title" class="swal2-input" placeholder="Title">
-        <input id="new-completed" type="checkbox"> Completed
-        </div>`,
-        focusConfirm: false,
-        preConfirm: () => {
-          const title = document.getElementById("new-title").value;
-          const completed = document.getElementById("new-completed").checked;
-          return { title, completed };
-        },
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          const { title, completed } = result.value;
-
-          await fetch("http://localhost:4000/todos/add", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ title, completed }),
-          });
-          window.location.reload();
-        }
-      });
-    }
-  ); */
-
   const btnCreate = createButton(
     "Create",
     [
