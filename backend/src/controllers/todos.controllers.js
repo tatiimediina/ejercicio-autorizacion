@@ -43,20 +43,41 @@ export const updateTodosCtrl = (req, res) => {
       .status(403)
       .json({ message: "No tienes permiso para editar esta tarea" });
   }
-
-  task.title = title || task.title;
-  task.completed = completed || task.completed;
+  if (!title || title.trim() === "") {
+    return res.status(400).json({ message: "El título es requerido." });
+  } else {
+    task.title = title || task.title;
+  }
+  if (typeof completed !== "boolean") {
+    return res
+      .status(400)
+      .json({ message: "El campo 'completed' debe ser un valor booleano." });
+  } else {
+    task.completed = completed || task.completed;
+  }
 
   res.json({ message: "Tarea actualizada correctamente", task });
 };
 export const createTodoCtrl = (req, res) => {
   const { title, completed } = req.body;
+
+  if (!title || title.trim() === "") {
+    return res.status(400).json({ message: "El título es requerido." });
+  }
+
+  if (typeof completed !== "boolean") {
+    return res
+      .status(400)
+      .json({ message: "El campo 'completed' debe ser un valor booleano." });
+  }
+
   const newTodo = {
     id: database.todos.length + 1,
     owner: req.user.id,
-    title,
+    title: title.trim(),
     completed,
   };
+
   database.todos.push(newTodo);
   res.json({ message: "Tarea creada correctamente", newTodo });
 };

@@ -1,8 +1,17 @@
 import Swal from "sweetalert2";
 
+// Función para crear botones
+const createButton = (text, classes, onClick) => {
+  const button = document.createElement("button");
+  button.textContent = text;
+  button.classList.add(...classes);
+  button.addEventListener("click", onClick);
+  return button;
+};
+
+// Función principal de la página
 export const todosPage = () => {
   const container = document.createElement("div");
-
   container.classList.add(
     "flex",
     "flex-col",
@@ -11,140 +20,226 @@ export const todosPage = () => {
     "h-screen",
     "bg-gray-200"
   );
+
+  // Título
+  const title = document.createElement("h1");
+  title.classList.add("text-3xl", "font-bold", "mb-4");
+  title.textContent = "List of Todos";
+  container.appendChild(title);
+
+  // Botones
   const btnContainer = document.createElement("div");
   btnContainer.classList.add("flex", "gap-4");
 
-  const btnHome = document.createElement("button");
-  const btnCreate = document.createElement("button");
-
-  btnHome.classList.add(
-    "bg-blue-500",
-    "text-white",
-    "p-2",
-    "rounded",
-    "hover:bg-blue-600",
-    "mb-4"
-  );
-  btnCreate.classList.add(
-    "bg-purple-500",
-    "text-white",
-    "p-2",
-    "rounded",
-    "hover:bg-blue-600",
-    "mb-4"
+  const btnHome = createButton(
+    "Home",
+    [
+      "bg-blue-500",
+      "text-white",
+      "p-2",
+      "rounded",
+      "hover:bg-blue-600",
+      "mb-4",
+    ],
+    () => {
+      window.location.pathname = "/home";
+    }
   );
 
-  btnHome.textContent = "Home";
-  btnCreate.textContent = "Create";
+  /* const btnCreate = createButton(
+    "Create",
+    [
+      "bg-purple-500",
+      "text-white",
+      "p-2",
+      "rounded",
+      "hover:bg-blue-600",
+      "mb-4",
+    ],
+    () => {
+      Swal.fire({
+        title: "Create New Todo",
+        html: `
+        <div class="flex flex-col gap-1">
+        <input id="new-title" class="swal2-input" placeholder="Title">
+        <input id="new-completed" type="checkbox"> Completed
+        </div>`,
+        focusConfirm: false,
+        preConfirm: () => {
+          const title = document.getElementById("new-title").value;
+          const completed = document.getElementById("new-completed").checked;
+          return { title, completed };
+        },
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const { title, completed } = result.value;
 
-  btnHome.addEventListener("click", () => {
-    window.location.pathname = "/home";
-  });
+          await fetch("http://localhost:4000/todos/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ title, completed }),
+          });
+          window.location.reload();
+        }
+      });
+    }
+  ); */
 
-  const title = document.createElement("h1");
+  const btnCreate = createButton(
+    "Create",
+    [
+      "bg-purple-500",
+      "text-white",
+      "p-2",
+      "rounded",
+      "hover:bg-blue-600",
+      "mb-4",
+    ],
+    () => {
+      Swal.fire({
+        title: "Create New Todo",
+        html: `
+        <div class="flex flex-col gap-1">
+          <input id="new-title" class="swal2-input" placeholder="Title">
+          <input id="new-completed" type="checkbox"> Completed
+        </div>`,
+        focusConfirm: false,
+        preConfirm: () => {
+          const title = document.getElementById("new-title").value;
+          const completed = document.getElementById("new-completed").checked;
 
-  title.classList.add("text-3xl", "font-bold", "mb-4");
-  title.textContent = "List of Todos";
+          if (!title || title.trim() === "") {
+            Swal.showValidationMessage(
+              "El título no puede estar vacío o solo tener espacios en blanco."
+            );
+            return;
+          }
 
-  const table = document.createElement("table");
+          return { title: title.trim(), completed };
+        },
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const { title, completed } = result.value;
 
-  table.classList.add(
-    "w-1/2",
-    "bg-white",
-    "shadow-md",
-    "h-[700px]",
-    "overflow-y-scroll"
+          try {
+            await fetch("http://localhost:4000/todos/add", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ title, completed }),
+            });
+            window.location.reload();
+          } catch (error) {
+            Swal.fire("Error", "Hubo un problema al crear la tarea.", "error");
+          }
+        }
+      });
+    }
   );
-
-  const thead = document.createElement("thead");
-  const tr = document.createElement("tr");
-  const th1 = document.createElement("th");
-  th1.classList.add("border", "px-4", "py-2");
-  th1.textContent = "ID";
-
-  const th2 = document.createElement("th");
-  th2.classList.add("border", "px-4", "py-2");
-  th2.textContent = "Title";
-
-  const th3 = document.createElement("th");
-  th3.classList.add("border", "px-4", "py-2");
-  th3.textContent = "Completed";
-
-  const th4 = document.createElement("th");
-  th4.classList.add("border", "px-4", "py-2");
-  th4.textContent = "Owner Id";
-
-  tr.appendChild(th1);
-  tr.appendChild(th2);
-  tr.appendChild(th3);
-  tr.appendChild(th4);
-
-  thead.appendChild(tr);
-
-  const tbody = document.createElement("tbody");
-
-  tbody.classList.add("text-center");
-  table.appendChild(thead);
-  table.appendChild(tbody);
 
   btnContainer.appendChild(btnHome);
   btnContainer.appendChild(btnCreate);
-  fetch("http://localhost:4000/todos", {
-    credentials: "include",
-  })
-    .then((response) => response.json())
-    .then((data) => {
+  container.appendChild(btnContainer);
+
+  // Contenedor de tareas
+  const todosContainer = document.createElement("div");
+  todosContainer.classList.add(
+    "w-full",
+    "max-w-4xl",
+    "grid",
+    "grid-cols-1",
+    "md:grid-cols-2",
+    "lg:grid-cols-3",
+    "gap-4"
+  );
+  container.appendChild(todosContainer);
+
+  // Obtener los datos
+  const loadTodos = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/todos", {
+        credentials: "include",
+      });
+      const data = await response.json();
       data.forEach((todo) => {
-        const tr = document.createElement("tr");
+        // Crear tarjeta (contenedor) para cada tarea
+        const todoCard = document.createElement("div");
+        todoCard.classList.add(
+          "bg-white",
+          "shadow-md",
+          "p-4",
+          "rounded",
+          "flex",
+          "flex-col",
+          "gap-2",
+          "rounded-xl",
+          "hover:scale-105"
+        );
 
-        const td1 = document.createElement("td");
-        td1.classList.add("border", "px-4", "py-2");
-        td1.textContent = todo.id;
+        const title = document.createElement("h2");
+        title.classList.add("text-lg", "font-bold");
+        title.textContent = todo.title;
+        todoCard.appendChild(title);
 
-        const td2 = document.createElement("td");
-        td2.classList.add("border", "px-4", "py-2");
-        td2.textContent = todo.title;
+        todoCard.setAttribute("data-id", todo.id);
 
-        const td3 = document.createElement("td");
-        td3.classList.add("border", "px-4", "py-2");
-        td3.textContent = todo.completed ? "Sí" : "No";
+        const completed = document.createElement("p");
+        completed.textContent = `Completed: ${todo.completed ? "Yes" : "No"}`;
+        todoCard.appendChild(completed);
 
-        const td4 = document.createElement("td");
-        td4.classList.add("border", "px-4", "py-2");
-        td4.textContent = todo.owner;
+        // Botones de acción (Editar, Eliminar)
+        const actionsContainer = document.createElement("div");
+        actionsContainer.classList.add("flex", "gap-2");
 
-        const td5 = document.createElement("td");
-        td5.classList.add("flex", "flex-row", "gap-2");
-        const btnDelete = document.createElement("button");
-        btnDelete.classList.add("bg-red-500", "text-white", "p-2", "rounded");
-        btnDelete.textContent = "Delete";
-        const btnEdit = document.createElement("button");
-        btnEdit.classList.add("bg-green-500", "text-white", "p-2", "rounded");
-        btnEdit.textContent = "Edit";
-
-        btnDelete.addEventListener("click", async () => {
-          try {
-            const response = await fetch(
-              `http://localhost:4000/todos/${todo.id}`,
-              {
-                method: "DELETE",
-                credentials: "include",
+        const btnDelete = createButton(
+          "Delete",
+          ["bg-red-500", "text-white", "p-2", "rounded"],
+          async () => {
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, delete it!",
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                try {
+                  const response = await fetch(
+                    `http://localhost:4000/todos/${todo.id}`,
+                    { method: "DELETE", credentials: "include" }
+                  );
+                  if (response.ok) {
+                    todoCard.remove();
+                    Swal.fire(
+                      "Deleted!",
+                      "Your task has been deleted.",
+                      "success"
+                    );
+                  } else {
+                    Swal.fire("Error", "Error al eliminar la tarea.", "error");
+                  }
+                } catch (error) {
+                  Swal.fire(
+                    "Error",
+                    "Hubo un error al conectarse al servidor.",
+                    "error"
+                  );
+                }
               }
-            );
-
-            if (response.ok) {
-              tr.remove();
-            } else {
-              console.error("Error al eliminar la tarea.");
-            }
-          } catch (error) {
-            console.error("Hubo un error al conectarse al servidor:", error);
+            });
           }
-        });
-        btnEdit.addEventListener("click", () => {
-          Swal.fire({
-            title: "Edit Todo",
-            html: `
+        );
+
+        const btnEdit = createButton(
+          "Edit",
+          ["bg-green-500", "text-white", "p-2", "rounded"],
+          () => {
+            Swal.fire({
+              title: "Edit Todo",
+              html: `
               <div class="flex flex-col gap-1">
               <input id="title" class="swal2-input" placeholder="Title" value="${
                 todo.title
@@ -152,92 +247,47 @@ export const todosPage = () => {
               <input id="completed" type="checkbox" ${
                 todo.completed ? "checked" : ""
               }> Completed
-          </div>
-            `,
-            focusConfirm: false,
-            preConfirm: () => {
-              const title = document.getElementById("title").value;
-              const completed = document.getElementById("completed").checked;
+            </div>`,
+              focusConfirm: false,
+              preConfirm: () => {
+                const title = document.getElementById("title").value;
+                const completed = document.getElementById("completed").checked;
 
-              return { title, completed };
-            },
-          })
-            .then((result) => {
+                if (!title || title.trim() === "") {
+                  Swal.showValidationMessage(
+                    "El título no puede estar vacío o solo tener espacios en blanco."
+                  );
+                  return;
+                }
+                return { title: title.trim(), completed };
+              },
+            }).then(async (result) => {
               if (result.isConfirmed) {
                 const { title, completed } = result.value;
-
-                fetch(`http://localhost:4000/todos/${todo.id}`, {
+                await fetch(`http://localhost:4000/todos/${todo.id}`, {
                   method: "PUT",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
+                  headers: { "Content-Type": "application/json" },
                   credentials: "include",
-                  body: JSON.stringify({
-                    title,
-                    completed,
-                    owner: todo.owner,
-                  }),
+                  body: JSON.stringify({ title, completed, owner: todo.owner }),
                 });
-              }
-            })
-            .then(() => {
-              window.location.reload();
-            });
-        });
-        btnCreate.addEventListener("click", () => {
-          Swal.fire({
-            title: "Create New Todo",
-            html: `
-              <div class="flex flex-col gap-1">
-              <input id="new-title" class="swal2-input" placeholder="Title">
-              <input id="new-completed" type="checkbox"> Completed
-          </div>
-            `,
-            focusConfirm: false,
-            preConfirm: () => {
-              const title = document.getElementById("new-title").value;
-              const completed =
-                document.getElementById("new-completed").checked;
-
-              return { title, completed };
-            },
-          }).then((result) => {
-            if (result.isConfirmed) {
-              const { title, completed } = result.value;
-
-              fetch("http://localhost:4000/todos/add", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                  title,
-                  completed,
-                }),
-              }).then(() => {
                 window.location.reload();
-              });
-            }
-          });
-        });
+              }
+            });
+          }
+        );
 
-        td5.appendChild(btnDelete);
-        td5.appendChild(btnEdit);
+        actionsContainer.appendChild(btnDelete);
+        actionsContainer.appendChild(btnEdit);
+        todoCard.appendChild(actionsContainer);
 
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        tr.appendChild(td3);
-        tr.appendChild(td4);
-        tr.appendChild(td5);
-
-        tbody.appendChild(tr);
+        todosContainer.appendChild(todoCard);
       });
-    });
+    } catch (error) {
+      Swal.fire("Error", "Error al cargar los datos.", "error");
+    }
+  };
 
-  container.appendChild(title);
-  container.appendChild(btnContainer);
-  container.appendChild(table);
+  loadTodos();
 
   return container;
 };
